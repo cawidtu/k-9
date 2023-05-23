@@ -27,17 +27,22 @@ jobs:
   apk:
     name: Generate APK
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest    
     steps:
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-      - name: Build APK
-        run: ./gradlew assembleDebug --stacktrace
-      - name: Upload APK
-        uses: actions/upload-artifact@v1
-        with:
-          name: apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+    - uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build APK
+      run: ./gradlew assembleDebug --stacktrace
+    - name: Upload APK
+      uses: actions/upload-artifact@v1
+      with:
+        name: apk
+        path: app/build/outputs/apk/debug/app-debug.apk
   release:
     name: Release APK
     needs: apk
