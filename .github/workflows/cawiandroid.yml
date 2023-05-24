@@ -44,7 +44,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: apk
-        path: app/k9mail/build/outputs/apk/release/k9mail-release-unsigned.apk
+        path: app/k9mail/build/outputs/apk/debug/k9mail-debug.apk
   release:
     name: Release APK
     needs: apk
