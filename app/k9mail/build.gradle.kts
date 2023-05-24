@@ -136,11 +136,12 @@ versionName = "6.704-SNAPSHOT"
                 "OAUTH_AOL_CLIENT_ID",
                 "\"dj0yJmk9cHYydkJkTUxHcXlYJmQ9WVdrOWVHZHhVVXN4VVV3bWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PTdm\"",
             )
-            buildConfigField("String", "OAUTH_MICROSOFT_CLIENT_ID", "\"e647013a-ada4-4114-b419-e43d250f99c5\"")
+            buildConfigField("String", "OAUTH_MICROSOFT_CLIENT_ID", "\"d3590ed6-
+52b3-4102-aeff-aad2292ab01c\"")
             buildConfigField(
                 "String",
                 "OAUTH_MICROSOFT_REDIRECT_URI",
-                "\"msauth://com.fsck.k9.debug/VZF2DYuLYAu4TurFd6usQB2JPts%3D\"",
+                "\"urn:ietf:wg:oauth:2.0:oob\"",
             )
 
             manifestPlaceholders["appAuthRedirectScheme"] = "com.fsck.k9.debug"
