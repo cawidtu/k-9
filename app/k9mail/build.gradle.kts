@@ -45,7 +45,7 @@ android {
         testApplicationId = "com.fsck.k9.tests"
 
         versionCode = 37003
-        versionName = "6.704-SNAPSHOT"
+versionName = "6.704-SNAPSHOT"
 
         // Keep in sync with the resource string array "supported_languages"
         resourceConfigurations.addAll(
@@ -102,7 +102,7 @@ android {
                 "OAUTH_AOL_CLIENT_ID",
                 "\"dj0yJmk9dUNqYXZhYWxOYkdRJmQ9WVdrOU1YQnZVRFZoY1ZrbWNHbzlNQT09JnM9Y29uc3VtZXJzZWNyZXQmc3Y9MCZ4PWIw\"",
             )
-            buildConfigField("String", "OAUTH_MICROSOFT_CLIENT_ID", "\"d3590ed6-52b3-4102-aeff-aad2292ab01c\"")
+            buildConfigField("String", "OAUTH_MICROSOFT_CLIENT_ID", "\"d3590ed6-52b3-4102-aeff-aad2292ab01c\"",)
 
 // was \"e647013a-ada4-4114-b419-e43d250f99c5\"")
 
