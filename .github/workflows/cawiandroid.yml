@@ -40,7 +40,7 @@ jobs:
         cache: gradle
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
-    - name: Build APK
+    - name: Build APK Debug
       run: ./gradlew assembleDebug
     - name: Upload APK
       uses: actions/upload-artifact@v1
