@@ -27,7 +27,7 @@ jobs:
     - name: Build with gradle
       run: ./gradlew build
   apk:
-    name: Generate APK
+    name: Generate Debug APK
     needs: build
     runs-on: ubuntu-latest    
     steps:
@@ -48,7 +48,7 @@ jobs:
         name: apk
         path: app/k9mail/build/outputs/apk/debug/k9mail-debug.apk
   release:
-    name: Release APK
+    name: Generate Release APK
     needs: apk
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
