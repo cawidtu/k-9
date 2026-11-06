@@ -3,14 +3,75 @@ package com.fsck.k9.message.extractors
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fsck.k9.mail.internet.MimeBodyPart
+import com.fsck.k9.mailstore.BinaryMemoryBody
 import com.fsck.k9.message.MessageCreationHelper
-import net.thunderbird.legacy.logging.Log
 import net.thunderbird.components.core.logging.testing.TestLogger
+import net.thunderbird.legacy.logging.Log
 import org.junit.Before
 import org.junit.Test
 
 class PreviewTextExtractorTest {
     private val previewTextExtractor = PreviewTextExtractor()
+
+    @Test
+    fun `removes Outlook notice from text before preview truncation`() {
+        // Arrange
+        val banner = "[Du får ikke ofte mails fra sender@example.org " +
+            "Få mere at vide om, hvorfor dette er vigtigt, på " +
+            "https://aka.ms/LearnAboutSenderIdentification ]\n\n"
+        val body = "Rapporten er klar. ".repeat(40)
+        val part = MessageCreationHelper.createTextPart("text/plain", banner + body)
+
+        // Act
+        val result = previewTextExtractor.extractPreview(part)
+
+        // Assert
+        assertThat(result).isEqualTo(body.trim().take(511) + "…")
+    }
+
+    @Test
+    fun `removes Outlook notice from HTML before link labels are flattened`() {
+        // Arrange
+        val html = "<table><tr><td>Du får ikke ofte mails fra sender@example.org. " +
+            "<a href='https://aka.ms/LearnAboutSenderIdentification'>Læs mere</a></td></tr></table>" +
+            "<p>Her er rapporten.</p>"
+        val part = MessageCreationHelper.createTextPart("text/html", html)
+
+        // Act
+        val result = previewTextExtractor.extractPreview(part)
+
+        // Assert
+        assertThat(result).isEqualTo("Her er rapporten.")
+    }
+
+    @Test
+    fun `reads beyond a large Outlook HTML banner to reach the real message text`() {
+        // Arrange
+        val html = "<div>Du får ikke ofte mails fra sender@example.org. " +
+            "<a href='https://aka.ms/LearnAboutSenderIdentification' style='" +
+            "color:revert!important;".repeat(500) + "'>Læs mere</a></div><p>Her er rapporten.</p>"
+        val part = MimeBodyPart(BinaryMemoryBody(html.toByteArray(), "8bit"), "text/html; charset=UTF-8")
+
+        // Act
+        val result = previewTextExtractor.extractPreview(part)
+
+        // Assert
+        assertThat(result).isEqualTo("Her er rapporten.")
+    }
+
+    @Test
+    fun `preserves literal markup and existing preview cleanup after notice removal`() {
+        // Arrange
+        val text = "You don't often get email from sender@example.org. Learn why this is important.\n\n" +
+            "Report <b>ready</b> https://example.org/\n-- \nSignature"
+        val part = MessageCreationHelper.createTextPart("text/plain", text)
+
+        // Act
+        val result = previewTextExtractor.extractPreview(part)
+
+        // Assert
+        assertThat(result).isEqualTo("Report ready ...")
+    }
 
     @Before
     fun setUp() {

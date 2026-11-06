@@ -1,5 +1,6 @@
 package com.fsck.k9.message.extractors
 
+import app.k9mail.html.cleaner.OutlookMessageCleaner
 import com.fsck.k9.mail.Part
 import com.fsck.k9.mail.internet.MessageExtractor
 import com.fsck.k9.mail.internet.MimeUtility.isSameMimeType
@@ -9,20 +10,33 @@ import com.fsck.k9.message.html.HtmlConverter
 
 @Suppress("TooManyFunctions")
 internal class PreviewTextExtractor {
+    private val outlookMessageCleaner = OutlookMessageCleaner()
+
     @Throws(PreviewExtractionException::class)
     fun extractPreview(textPart: Part): String {
         val text = MessageExtractor.getTextFromPart(textPart, MAX_CHARACTERS_CHECKED_FOR_PREVIEW)
             ?: throw PreviewExtractionException("Couldn't get text from part")
 
+        val preview = createPreview(textPart, text)
+        return if (preview.isEmpty() && text.isNotEmpty()) {
+            val extendedText =
+                MessageExtractor.getTextFromPart(textPart, EXTENDED_CHARACTERS_CHECKED_FOR_PREVIEW) ?: text
+            if (extendedText == text) preview else createPreview(textPart, extendedText)
+        } else {
+            preview
+        }
+    }
+
+    private fun createPreview(textPart: Part, text: String): String {
         val (plainText, parsePlainTextAsHtml) = convertFromHtmlIfNecessary(textPart, text)
         return stripTextForPreview(plainText, parsePlainTextAsHtml)
     }
 
     private fun convertFromHtmlIfNecessary(textPart: Part, text: String): Pair<String, Boolean> {
         return if (isSameMimeType(textPart.mimeType, "text/html")) {
-            HtmlConverter.htmlToText(text) to false
+            HtmlConverter.htmlToText(outlookMessageCleaner.cleanHtml(text)) to false
         } else {
-            text to true
+            outlookMessageCleaner.cleanPlainText(text) to true
         }
     }
 
@@ -37,7 +51,7 @@ internal class PreviewTextExtractor {
         intermediateText = stripLineBasedArtifacts(intermediateText)
         // Always parse the text as HTML if it's plaintext, independently of the mimetype
         if (parsePlainTextAsHtml) {
-            intermediateText = HtmlConverter.htmlToText(intermediateText)
+            intermediateText = HtmlConverter.htmlToText(outlookMessageCleaner.cleanHtml(intermediateText))
             intermediateText = stripLineBasedArtifacts(intermediateText)
         }
         intermediateText = removeParsedHtmlUrls(intermediateText)
@@ -166,6 +180,7 @@ internal class PreviewTextExtractor {
     companion object {
         private const val MAX_PREVIEW_LENGTH = 512
         private const val MAX_CHARACTERS_CHECKED_FOR_PREVIEW = 8192L
+        private const val EXTENDED_CHARACTERS_CHECKED_FOR_PREVIEW = 65_536L
         private const val PREVIEW_SECTION_SEPARATOR = "[…]"
 
         private val REGEX_CRLF = "(\\r\\n|\\r)".toRegex()

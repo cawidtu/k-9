@@ -1,6 +1,7 @@
 package com.fsck.k9.storage.messages
 
 import android.database.Cursor
+import app.k9mail.html.cleaner.OutlookMessageCleaner
 import app.k9mail.legacy.mailstore.MessageDetailsAccessor
 import app.k9mail.legacy.mailstore.MessageMapper
 import app.k9mail.legacy.message.extractors.PreviewResult
@@ -192,6 +193,8 @@ ORDER BY $sortOrder
 }
 
 private class CursorMessageAccessor(val cursor: Cursor, val includesThreadCount: Boolean) : MessageDetailsAccessor {
+    private val outlookMessageCleaner = OutlookMessageCleaner()
+
     override val id: Long
         get() = cursor.getLong(0)
     override val messageServerId: String
@@ -214,7 +217,9 @@ private class CursorMessageAccessor(val cursor: Cursor, val includesThreadCount:
         get() {
             return when (DatabasePreviewType.fromDatabaseValue(cursor.getString(9))) {
                 DatabasePreviewType.NONE -> PreviewResult.none()
-                DatabasePreviewType.TEXT -> PreviewResult.text(cursor.getString(10))
+                DatabasePreviewType.TEXT -> PreviewResult.text(
+                    outlookMessageCleaner.cleanCachedPreview(cursor.getString(10).orEmpty()),
+                )
                 DatabasePreviewType.ENCRYPTED -> PreviewResult.encrypted()
                 DatabasePreviewType.ERROR -> PreviewResult.error()
             }

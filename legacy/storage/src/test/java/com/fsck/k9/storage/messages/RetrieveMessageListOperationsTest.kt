@@ -12,8 +12,8 @@ import assertk.assertions.isTrue
 import com.fsck.k9.mail.Address
 import com.fsck.k9.mailstore.DatabasePreviewType
 import com.fsck.k9.storage.RobolectricTest
-import net.thunderbird.legacy.logging.Log
 import net.thunderbird.components.core.logging.testing.TestLogger
+import net.thunderbird.legacy.logging.Log
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -21,6 +21,53 @@ import org.junit.Test
 class RetrieveMessageListOperationsTest : RobolectricTest() {
     private lateinit var sqliteDatabase: SQLiteDatabase
     private lateinit var retrieveMessageListOperations: RetrieveMessageListOperations
+
+    @Test
+    fun `getMessages cleans old cached notices without modifying stored data`() {
+        // Arrange
+        val folderId = sqliteDatabase.createFolder()
+        val cachedPreview = "[Du får ikke ofte mails fra sender@example.org " +
+            "Få mere at vide om, hvorfor dette er vigtigt, på ... ] Her er rapporten."
+        val messageId = sqliteDatabase.createMessage(
+            folderId,
+            uid = "cached-notice",
+            previewType = DatabasePreviewType.TEXT,
+            preview = cachedPreview,
+        )
+        sqliteDatabase.createThread(messageId)
+
+        // Act
+        val result = getMessagesFromFolder(folderId) { message -> message.preview.previewText }
+
+        // Assert
+        assertThat(result).containsExactly("Her er rapporten.")
+        sqliteDatabase.rawQuery(
+            "SELECT preview FROM messages WHERE id = ?",
+            arrayOf(messageId.toString()),
+        ).use { cursor ->
+            assertThat(cursor.moveToFirst()).isTrue()
+            assertThat(cursor.getString(0)).isEqualTo(cachedPreview)
+        }
+    }
+
+    @Test
+    fun `threaded list suppresses a cached preview containing only the notice`() {
+        // Arrange
+        val folderId = sqliteDatabase.createFolder()
+        val messageId = sqliteDatabase.createMessage(
+            folderId,
+            uid = "notice-only",
+            previewType = DatabasePreviewType.TEXT,
+            preview = "[You don't often get email from sender@example.org. Learn why this is important at ... ]",
+        )
+        sqliteDatabase.createThread(messageId)
+
+        // Act
+        val result = getThreadedMessagesFromFolder(folderId) { message -> message.preview.previewText }
+
+        // Assert
+        assertThat(result).containsExactly("")
+    }
 
     @Before
     fun setUp() {

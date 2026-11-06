@@ -151,9 +151,10 @@ public class MessageViewInfoExtractor {
                 !message.isSet(Flag.X_DOWNLOADED_FULL) || MessageExtractor.hasMissingParts(message);
 
         UnsubscribeUri preferredUnsubscribeUri = ListUnsubscribeHelper.INSTANCE.getPreferredListUnsubscribeUri(message);
+        String textPlainFormatted = htmlProcessor.processForDisplayFragment(HtmlConverter.textToHtml(viewable.text));
 
         return MessageViewInfo.createWithExtractedContent(
-                message, contentPart, isMessageIncomplete, viewable.html, HtmlConverter.textToHtml(viewable.text), attachmentInfos, attachmentResolver,
+                message, contentPart, isMessageIncomplete, viewable.html, textPlainFormatted, attachmentInfos, attachmentResolver,
                 preferredUnsubscribeUri);
     }
 

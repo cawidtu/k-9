@@ -650,6 +650,12 @@ public class MessageViewInfoExtractorTest extends K9RobolectricTest {
                 return (String) invocation.getArguments()[0];
             }
         });
+        when(htmlProcessor.processForDisplayFragment(anyString())).thenAnswer(new Answer<String>() {
+            @Override
+            public String answer(InvocationOnMock invocation) throws Throwable {
+                return (String) invocation.getArguments()[0];
+            }
+        });
 
         return htmlProcessor;
     }
